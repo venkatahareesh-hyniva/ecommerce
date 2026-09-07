@@ -20,14 +20,14 @@ const userSchema = new mongoose.Schema(
       // select: false
     },
     countryCode: {
-  type: String,
-  required: true,
-},
+      type: String,
+      required: true,
+    },
 
-phoneNumber: {
-  type: String,
-  required: true,
-},
+    phoneNumber: {
+      type: String,
+      required: true,
+    },
     address: {
       street: String,
       city: String,
@@ -54,6 +54,10 @@ phoneNumber: {
       enum: ["pending", "active", "inactive", "rejected", "locked"],
       default: "active",
       required: true,
+    },
+    rejectionReason: {
+      type: String,
+      default: null,
     },
     userId: {
       type: Number,

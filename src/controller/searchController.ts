@@ -115,7 +115,7 @@ export const searchProducts = async (req: any, res: any) => {
       return sendSuccessResponse(
         res,
         "Product fetched successfully",
-        products[0],
+        products,
       );
     }
 

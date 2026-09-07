@@ -8,7 +8,7 @@ const cartRouter = express.Router();
 
 cartRouter.post("/",authMiddleware,authorizeRoles([ROLES.USER]), addToCart);
 cartRouter.get("/",authMiddleware,authorizeRoles([ROLES.USER]), getCart);
-cartRouter.patch("/:productId",authMiddleware, authorizeRoles([ROLES.USER]), updateCartItem);
+cartRouter.patch("/",authMiddleware, authorizeRoles([ROLES.USER]), updateCartItem);
 cartRouter.delete("/remove",authMiddleware, authorizeRoles([ROLES.USER]), removeCartItem);
 cartRouter.delete("/",authMiddleware, authorizeRoles([ROLES.USER]), clearCart);
 

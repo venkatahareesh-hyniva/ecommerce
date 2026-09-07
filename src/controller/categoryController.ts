@@ -158,15 +158,6 @@ export const updateCategory = async (req: any, res: any) => {
     };
 
     await existingCategory.save();
-
-    // const responseData = {
-    //   name: existingCategory.categoryName,
-    //   description: existingCategory.description,
-    //   images: existingCategory.images,
-    //   videos: existingCategory.videos,
-    //   updatedBy: existingCategory.updatedBy
-    // };
-
     return sendSuccessResponse(
       res,
       "Category updated successfully",

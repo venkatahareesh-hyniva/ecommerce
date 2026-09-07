@@ -52,11 +52,7 @@ export const createProduct = async (req: any, res: any) => {
       createdBy: user._id,
       updatedBy: user._id,
     });
-    return sendSuccessResponse(
-      res,
-      "Product created successfully",
-      //product,
-    );
+    return sendSuccessResponse(res, "Product created successfully", product);
   } catch (error) {
     console.log(error);
     return sendBadRequest(res, "Failed to create product");
@@ -207,15 +203,13 @@ export const updateProduct = async (req: any, res: any) => {
       isDeleted: false,
     }).select("-_id -__v -isDeleted");
 
-    return sendSuccessResponse(res, "Product updated successfully", product);
+    return sendSuccessResponse(res, "Product updated successfully"); // product);
   } catch (error) {
     console.log(error);
 
     return sendInternalServerError(res, "Failed to update product");
   }
 };
-
-
 
 export const deleteProduct = async (req: any, res: any) => {
   try {
@@ -233,10 +227,11 @@ export const deleteProduct = async (req: any, res: any) => {
       return sendNotFound(res, "Product not found");
     }
 
-    if (user.role === "dealer") {
-      if (existingProduct.createdBy.toString() !== user._id.toString()) {
-        return sendForBiddden(res, "You can only delete your own products");
-      }
+    if (
+      user.role === "dealer" &&
+      existingProduct.createdBy !== user._id
+    ) {
+      return sendForBiddden(res, "You can only delete your own products");
     }
 
     await Product.findByIdAndUpdate(productid, {

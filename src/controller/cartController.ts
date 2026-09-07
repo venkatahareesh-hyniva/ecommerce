@@ -13,10 +13,6 @@ export const addToCart = async (req: any, res: any) => {
     const userId = req.user?._id;
     const { items } = req.body;
 
-    if (!userId) {
-      return sendBadRequest(res, "User information is missing");
-    }
-
     if (!items || !Array.isArray(items) || items.length === 0) {
       return sendBadRequest(res, "Items are required");
     }
@@ -85,13 +81,18 @@ export const addToCart = async (req: any, res: any) => {
 
       await cart.save();
     }
-
-   const { userId: cartUserId, __v, ...cartResponse } = cart.toObject();
+    // const cartResponse: any = cart.toObject();
+    // cartResponse.items.forEach((item: any) => {
+    //   delete item.isSelected;
+    //   delete cartResponse.userId;
+    //   delete cartResponse.__v;
+    // });
+    const {userId: cartuserId ,__v,... responseData} = cart.toObject();
 
     return sendSuccessResponse(
       res,
       "Product added to cart successfully",
-      cartResponse,
+      responseData,
     );
   } catch (error) {
     console.log(error);
@@ -118,7 +119,8 @@ export const getCart = async (req: any, res: any) => {
     const cartResponse = cart.toObject();
     delete cartResponse.userId;
 
-    return sendSuccessResponse( res,
+    return sendSuccessResponse(
+      res,
       "cart items fetched successfully",
       cartResponse,
     );
@@ -132,23 +134,14 @@ export const getCart = async (req: any, res: any) => {
 export const updateCartItem = async (req: any, res: any) => {
   try {
     const userId = req.user?._id;
-    const { productId } = req.params;
-    const { quantity, isSelected } = req.body;
+    const { items } = req.body;
 
     if (!userId) {
       return sendBadRequest(res, "User information is missing");
     }
 
-    if (!productId) {
-      return sendBadRequest(res, "Product ID is required");
-    }
-
-    if (!isValidObjectId(productId)) {
-      return sendBadRequest(res, "Invalid product ID");
-    }
-
-    if (quantity === undefined && isSelected === undefined) {
-      return sendBadRequest(res, "Quantity or isSelected is required");
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return sendBadRequest(res, "Items are required");
     }
 
     const cart = await Cart.findOne({ userId }).select("-__v");
@@ -157,53 +150,69 @@ export const updateCartItem = async (req: any, res: any) => {
       return sendNotFound(res, "Cart not found");
     }
 
-    const cartItem = cart.items.find(
-      (item: any) => item.productId.toString() === productId.toString(),
-    );
+    for (const item of items) {
+      const { productId, quantity, isSelected } = item;
 
-    if (!cartItem) {
-      return sendNotFound(res, "Product not found in cart");
+      if (!productId) {
+        return sendBadRequest(res, "Product ID is required");
+      }
+
+      if (!isValidObjectId(productId)) {
+        return sendBadRequest(res, "Invalid product ID");
+      }
+
+      if (quantity === undefined && isSelected === undefined) {
+        return sendBadRequest(res, "Quantity or isSelected is required");
+      }
+
+      const cartItem = cart.items.find(
+        (cartItem: any) =>
+          cartItem.productId.toString() === productId.toString(),
+      );
+
+      if (!cartItem) {
+        return sendNotFound(res, `Product ${productId} not found in cart`);
+      }
+
+      if (quantity !== undefined) {
+        if (quantity < 1) {
+          return sendBadRequest(res, "Quantity must be at least 1");
+        }
+
+        const product = await Product.findOne({
+          _id: productId,
+          isDeleted: false,
+        });
+
+        if (!product) {
+          return sendNotFound(res, "Product not found");
+        }
+
+        if (quantity > product.stock_quantity) {
+          return sendBadRequest(res, "Insufficient stock");
+        }
+        cartItem.quantity = quantity;
+      }
+
+      if (isSelected !== undefined) {
+        if (typeof isSelected !== "boolean") {
+          return sendBadRequest(res, "isSelected must be true or false");
+        }
+
+        cartItem.set("isSelected", isSelected);
+      }
     }
 
-    // Update quantity
-    if (quantity !== undefined) {
-      if (quantity < 1) {
-        return sendBadRequest(res, "Quantity must be at least 1");
-      }
-
-      const product = await Product.findOne({
-        _id: productId,
-        isDeleted: false,
-      });
-
-      if (!product) {
-        return sendNotFound(res, "Product not found");
-      }
-
-      if (quantity > product.stock_quantity) {
-        return sendBadRequest(res, "Insufficient stock");
-      }
-
-      cartItem.quantity = quantity;
-    }
-    if (isSelected !== undefined) {
-      if (typeof isSelected !== "boolean") {
-        return sendBadRequest(res, "isSelected must be true or false");
-      }
-      cartItem.set("isSelected", isSelected);
-    }
     await cart.save();
- const cartResponse = cart.toObject();
-delete cartResponse.userId;
 
-return sendSuccessResponse(
-  res,
-  "cart updated successfully",
-  cartResponse
-);
+    const cartResponse = cart.toObject();
+    delete cartResponse.userId;
+
+    return sendSuccessResponse(res, "Cart updated successfully", cartResponse);
   } catch (error) {
     console.log(error);
-    return sendInternalServerError(res, "Failed to update cart item");
+
+    return sendInternalServerError(res, "Failed to update cart");
   }
 };
 
@@ -242,9 +251,7 @@ export const removeCartItem = async (req: any, res: any) => {
 
     await cart.save();
 
-    return sendSuccessResponse(
-      res,
-      "Product removed from cart successfully");
+    return sendSuccessResponse(res, "Product removed from cart successfully");
   } catch (error) {
     console.log(error);
 
