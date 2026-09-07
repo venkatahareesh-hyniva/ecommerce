@@ -1,15 +1,14 @@
 import express from "express";
 import { addToCart, clearCart, getCart, removeCartItem, updateCartItem } from "../controller/cartController.js";
-import { authMiddleware } from "../middleware/authmiddleware.js";
-import { authorizeRoles } from "../middleware/rolemiddleware.js";
+
 import { ROLES } from "../config/config.js";
 
 const cartRouter = express.Router();
 
-cartRouter.post("/",authMiddleware,authorizeRoles([ROLES.USER]), addToCart);
-cartRouter.get("/",authMiddleware,authorizeRoles([ROLES.USER]), getCart);
-cartRouter.patch("/",authMiddleware, authorizeRoles([ROLES.USER]), updateCartItem);
-cartRouter.delete("/remove",authMiddleware, authorizeRoles([ROLES.USER]), removeCartItem);
-cartRouter.delete("/",authMiddleware, authorizeRoles([ROLES.USER]), clearCart);
+cartRouter.post("/", addToCart);
+cartRouter.get("/", getCart);
+cartRouter.patch("/", updateCartItem);
+cartRouter.delete("/remove", removeCartItem);
+cartRouter.delete("/", clearCart);
 
 export default cartRouter;

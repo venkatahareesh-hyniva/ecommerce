@@ -9,8 +9,6 @@ import {
   sendSuccessResponse,
 } from "../utils/response-utils.js";
 
-
-
 export const getDealerProducts = async (req: any, res: any) => {
   try {
     const dealerId = req.user._id;
@@ -19,7 +17,7 @@ export const getDealerProducts = async (req: any, res: any) => {
       createdBy: dealerId,
       isDeleted: false,
     })
-      .select("-__v")
+      .select("-__v -createdBy -updatedBy")
       .populate("categoryId", "categoryName description");
 
     return sendSuccessResponse(
@@ -35,20 +33,25 @@ export const getDealerProducts = async (req: any, res: any) => {
 
 export const getDealerOrders = async (req: any, res: any) => {
   try {
-    const dealerId = req.user._id.toString();
-
+    const dealerId = req.user._id;
     const orders = await Order.find({
       "items.dealerId": dealerId,
     })
-      .populate("userId", "firstName lastName email -_id")
-      .populate("items.productId", "productName");
+      .populate("userId", "firstName email -_id")
+      .populate("items.productId", "productName")
+      .select("-dealerId");
 
     const dealerOrders = orders.map((order: any) => {
       const orderObject = order.toObject();
 
-      orderObject.items = orderObject.items.filter(
-        (item: any) => item.dealerId.toString() === dealerId,
-      );
+      orderObject.items = orderObject.items
+        .filter(
+          (item: any) => item.dealerId?.toString() === dealerId.toString(),
+        )
+        .map((item: any) => {
+          const { dealerId, ...orderItem } = item;
+          return orderItem;
+        });
 
       return orderObject;
     });
@@ -80,7 +83,7 @@ export const getDealerOrderById = async (req: any, res: any) => {
       _id: orderId,
       "items.productId": { $in: productIds },
     })
-      .populate("userId", "firstName lastName email")
+      .populate("userId", "firstName email")
       .populate("items.productId", "productName");
 
     if (!order) {
@@ -100,8 +103,8 @@ export const getDealerOrderById = async (req: any, res: any) => {
 export const updateDealerOrderStatus = async (req: any, res: any) => {
   try {
     const dealerId = req.user._id;
-    const orderId = req.params.orderId;
-    const { status } = req.body;
+    const { orderId } = req.params;
+    const { productId, status } = req.body;
 
     const allowedStatuses = ["Confirmed", "Shipped", "Delivered", "Cancelled"];
 
@@ -109,16 +112,24 @@ export const updateDealerOrderStatus = async (req: any, res: any) => {
       return sendBadRequest(res, "Invalid order status");
     }
 
-    const dealerProducts = await Product.find({
+    if (!productId) {
+      return sendBadRequest(res, "Product ID is required");
+    }
+
+    const product = await Product.findOne({
+      _id: productId,
       createdBy: dealerId,
       isDeleted: false,
-    }).select("_id");
+    });
 
-    const productIds = dealerProducts.map((product) => product._id);
+    if (!product) {
+      return sendNotFound(res, "Product not found or does not belong to you");
+    }
 
     const order = await Order.findOne({
       _id: orderId,
-      "items.productId": { $in: productIds },
+      "items.productId": productId,
+      "items.dealerId": dealerId,
     }).populate(
       "shippingAddress",
       "addressLine1 addressLine2 city state pincode country",
@@ -127,31 +138,41 @@ export const updateDealerOrderStatus = async (req: any, res: any) => {
     if (!order) {
       return sendNotFound(
         res,
-        "Order not found or does not contain your products",
+        "Order not found or product does not belong to you",
       );
     }
 
-    order.items.forEach((item: any) => {
-      if (item.dealerId.toString() === dealerId.toString()) {
-        item.status = status;
-      }
-    });
+    const item = order.items.find(
+      (item: any) =>
+        item.productId.toString() === productId.toString() &&
+        item.dealerId.toString() === dealerId.toString(),
+    );
+
+    if (!item) {
+      return sendNotFound(res, "Product not found in this order");
+    }
+
+    item.status = status;
+
     await order.save();
-    const {totalAmount,...orderData} =order.toObject();
+
+    const { totalAmount, ...orderData } = order.toObject();
+
     const orderResponse = {
       ...orderData,
-      items: order.items.filter(
+      items: orderData.items.filter(
         (item: any) => item.dealerId.toString() === dealerId.toString(),
       ),
     };
 
     return sendSuccessResponse(
       res,
-      "Order status updated successfully",
+      "Product order status updated successfully",
       orderResponse,
     );
   } catch (error) {
     console.log("Update dealer order status error:", error);
+
     return sendInternalServerError(res, "Failed to update order status");
   }
 };

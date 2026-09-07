@@ -1,8 +1,10 @@
 import { expect } from "chai";
-import { validateSignup } from "../src/validator/auth.validator.js";
+import {
+  validateSignup,
+  validateLogin,
+} from "../src/validator/auth.validator.js";
 
 describe("validateSignup", () => {
-
   it("should return error when required fields are missing", () => {
     const result = validateSignup({});
 
@@ -14,13 +16,12 @@ describe("validateSignup", () => {
       firstName: "Hareesh123",
       lastName: "User",
       email: "user@gmail.com",
-      phoneNumber: "+919876543210",
+      countryCode: "+91",
+      phoneNumber: "9876543210",
       password: "Password@123",
     });
 
-    expect(result).to.equal(
-      "FirstName should contain only letters"
-    );
+    expect(result).to.equal("FirstName should contain only letters");
   });
 
   it("should return error for invalid last name", () => {
@@ -28,13 +29,12 @@ describe("validateSignup", () => {
       firstName: "Hareesh",
       lastName: "User123",
       email: "user@gmail.com",
-      phoneNumber: "+919876543210",
+      countryCode: "+91",
+      phoneNumber: "9876543210",
       password: "Password@123",
     });
 
-    expect(result).to.equal(
-      "LastName should contain only letters"
-    );
+    expect(result).to.equal("LastName should contain only letters");
   });
 
   it("should return error for invalid email", () => {
@@ -42,25 +42,37 @@ describe("validateSignup", () => {
       firstName: "Hareesh",
       lastName: "User",
       email: "invalid-email",
-      phoneNumber: "+919876543210",
+       countryCode:"+91",
+      phoneNumber: "9876543210",
       password: "Password@123",
     });
 
     expect(result).to.equal("Invalid email format");
   });
 
-  it("should return error for invalid phone number", () => {
+  it("should return error for invalid country code", () => {
     const result = validateSignup({
       firstName: "Hareesh",
       lastName: "User",
-      email: "user@gmail.com",
+      email: "hareesh@gmail.com",
+       countryCode:"91",
       phoneNumber: "9876543210",
       password: "Password@123",
     });
 
-    expect(result).to.equal(
-      "Phone number must include a valid country code"
-    );
+    expect(result).to.equal("Invalid country code");
+  });
+  it("should return error for invalid phone number", () => {
+    const result = validateSignup({
+      firstName: "Hareesh",
+      lastName: "User",
+      email: "hareesh@gmail.com",
+       countryCode:"+91",
+      phoneNumber: "98765",
+      password: "Password@123",
+    });
+
+    expect(result).to.equal("Invalid phone number");
   });
 
   it("should return error when password is less than 8 characters", () => {
@@ -68,13 +80,12 @@ describe("validateSignup", () => {
       firstName: "Hareesh",
       lastName: "User",
       email: "user@gmail.com",
-      phoneNumber: "+919876543210",
+       countryCode:"+91",
+      phoneNumber: "9876543210",
       password: "Pass@1",
     });
 
-    expect(result).to.equal(
-      "Password must be at least 8 characters"
-    );
+    expect(result).to.equal("Password must be at least 8 characters");
   });
 
   it("should return error when password has no uppercase letter", () => {
@@ -82,13 +93,12 @@ describe("validateSignup", () => {
       firstName: "Hareesh",
       lastName: "User",
       email: "user@gmail.com",
-      phoneNumber: "+919876543210",
+      countryCode:"+91",
+      phoneNumber: "9876543210",
       password: "password@123",
     });
 
-    expect(result).to.equal(
-      "Password must contain at least one uppercase"
-    );
+    expect(result).to.equal("Password must contain at least one uppercase");
   });
 
   it("should return error when password has no lowercase letter", () => {
@@ -96,13 +106,12 @@ describe("validateSignup", () => {
       firstName: "Hareesh",
       lastName: "User",
       email: "user@gmail.com",
-      phoneNumber: "+919876543210",
+      countryCode:"+91",
+      phoneNumber: "9876543210",
       password: "PASSWORD@123",
     });
 
-    expect(result).to.equal(
-      "Password must contain at least one lowercase"
-    );
+    expect(result).to.equal("Password must contain at least one lowercase");
   });
 
   it("should return error when password has no number", () => {
@@ -110,13 +119,12 @@ describe("validateSignup", () => {
       firstName: "Hareesh",
       lastName: "User",
       email: "user@gmail.com",
-      phoneNumber: "+919876543210",
+       countryCode:"+91",
+      phoneNumber: "9876543210",
       password: "Password@abc",
     });
 
-    expect(result).to.equal(
-      "Password must contain at least one number"
-    );
+    expect(result).to.equal("Password must contain at least one number");
   });
 
   it("should return error when password has no special character", () => {
@@ -124,12 +132,13 @@ describe("validateSignup", () => {
       firstName: "Hareesh",
       lastName: "User",
       email: "user@gmail.com",
-      phoneNumber: "+919876543210",
+       countryCode:"+91",
+      phoneNumber: "9876543210",
       password: "Password123",
     });
 
     expect(result).to.equal(
-      "Password must contain at least one special character"
+      "Password must contain at least one special character",
     );
   });
 
@@ -138,11 +147,53 @@ describe("validateSignup", () => {
       firstName: "Hareesh",
       lastName: "User",
       email: "user@gmail.com",
-      phoneNumber: "+919876543210",
+       countryCode:"+91",
+      phoneNumber: "9876543210",
       password: "Password@123",
     });
 
     expect(result).to.equal(null);
   });
+});
 
+describe("validateLogin()", () => {
+  it("should return error when email and password are missing", () => {
+    const result = validateLogin({});
+
+    expect(result).to.equal("Email and Password are required");
+  });
+
+  it("should return error when email is missing", () => {
+    const result = validateLogin({
+      password: "password123",
+    });
+
+    expect(result).to.equal("Email and Password are required");
+  });
+
+  it("should return error when password is missing", () => {
+    const result = validateLogin({
+      email: "test@gmail.com",
+    });
+
+    expect(result).to.equal("Email and Password are required");
+  });
+
+  it("should return error for invalid email format", () => {
+    const result = validateLogin({
+      email: "invalid-email",
+      password: "password123",
+    });
+
+    expect(result).to.equal("Invalid email format");
+  });
+
+  it("should return null for valid email and password", () => {
+    const result = validateLogin({
+      email: "test@gmail.com",
+      password: "password123",
+    });
+
+    expect(result).to.equal(null);
+  });
 });

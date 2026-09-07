@@ -1,7 +1,15 @@
 export function validateSignup(data: any) {
-  const { firstName, lastName, email, phoneNumber, password } = data;
+  const { firstName, lastName, email, countryCode, phoneNumber, password } =
+    data;
 
-  if (!firstName || !lastName || !email || !phoneNumber || !password) {
+  if (
+    !firstName ||
+    !lastName ||
+    !email ||
+    !countryCode ||
+    !phoneNumber ||
+    !password
+  ) {
     return "All fields are required";
   }
 
@@ -21,10 +29,16 @@ export function validateSignup(data: any) {
     return "Invalid email format";
   }
 
-  const phone = /^\+[1-9]\d{7,14}$/;
+  const countryCodeValidation = /^\+[1-9]\d{0,3}$/;
 
-  if (!phone.test(phoneNumber)) {
-    return "Phone number must include a valid country code";
+  if (!countryCodeValidation.test(countryCode)) {
+    return "Invalid country code";
+  }
+
+  const phoneValidation = /^\d{7,15}$/;
+
+  if (!phoneValidation.test(phoneNumber)) {
+    return "Invalid phone number";
   }
 
   if (password.length < 8) {

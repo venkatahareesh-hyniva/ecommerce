@@ -81,18 +81,13 @@ export const addToCart = async (req: any, res: any) => {
 
       await cart.save();
     }
-    // const cartResponse: any = cart.toObject();
-    // cartResponse.items.forEach((item: any) => {
-    //   delete item.isSelected;
-    //   delete cartResponse.userId;
-    //   delete cartResponse.__v;
-    // });
+    
     const {userId: cartuserId ,__v,... responseData} = cart.toObject();
 
     return sendSuccessResponse(
       res,
       "Product added to cart successfully",
-      responseData,
+      //responseData,
     );
   } catch (error) {
     console.log(error);

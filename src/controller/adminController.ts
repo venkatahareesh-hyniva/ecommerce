@@ -1,4 +1,5 @@
 import { USER_STATUS } from "../config/config.js";
+import Product from "../model/productModel.js";
 import User from "../model/userModel.js";
 
 import {
@@ -193,5 +194,50 @@ export const getUsers = async (req: any, res: any) => {
     console.log("Get users error:", error);
 
     return sendInternalServerError(res, "Failed to fetch users");
+  }
+};
+
+export const getAllProductsForAdmin = async (req: any, res: any) => {
+  try {
+    const products = await Product.find()
+      .populate("categoryId", "categoryName")
+      .populate("createdBy", "firstName email")
+      .populate("updatedBy", "firstName email")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    products.forEach((product: any) => {
+      product.productId = product._id;
+      delete product._id;
+    });
+
+    return sendSuccessResponse(res, "Products fetched successfully", products);
+  } catch (error) {
+    console.log(error);
+    return sendInternalServerError(res, "Failed to fetch products");
+  }
+};
+
+export const getProductByIdForAdmin = async (req: any, res: any) => {
+  try {
+    const { productId } = req.params;
+
+    const product = await Product.findOne({
+      _id: productId,
+      isDeleted: false,
+    })
+      .populate("categoryId", "categoryName")
+      .populate("createdBy", "firstName email")
+      .populate("updatedBy", "firstName email");
+
+    if (!product) {
+      return sendNotFound(res, "Product not found");
+    }
+    const {_id, ...productData} =product.toObject();
+
+    return sendSuccessResponse(res, "Product fetched successfully", productData);
+  } catch (error) {
+    console.log(error);
+    return sendInternalServerError(res, "Failed to fetch product");
   }
 };

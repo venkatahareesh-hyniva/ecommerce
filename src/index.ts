@@ -33,13 +33,13 @@ app.use("/api/admin",authMiddleware,authorizeRoles([ROLES.ADMIN]),adminRouter)
 //dealer
 app.use("/api/dealer", authMiddleware, authorizeRoles([ROLES.DEALER]), dealerRouter);
 //user
-app.use("/api/user", userRouter);
+app.use("/api/user", authMiddleware, userRouter);
 //category
 app.use("/api/categories", categoryRouter);
 // product
 app.use("/api/products", productRouter);
 //carts
-app.use("/api/cart", cartRouter);
+app.use("/api/cart",authMiddleware, authorizeRoles([ROLES.USER]), cartRouter);
 //orders
 app.use("/api/orders", orderRouter)
 //address

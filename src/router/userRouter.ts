@@ -1,5 +1,5 @@
 import express from "express";
-import { authMiddleware } from "../middleware/authmiddleware.js";
+
 import {
    
   getProfile,  
@@ -8,9 +8,9 @@ import {
 
 const userRouter = express.Router();
 
-userRouter.patch("/profile", authMiddleware, updateProfile);
+userRouter.patch("/profile", updateProfile);
 
-userRouter.get("/profile", authMiddleware, getProfile);
+userRouter.get("/profile", getProfile);
 
 export default userRouter;
 

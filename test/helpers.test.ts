@@ -1,25 +1,35 @@
-export const createMockResponse = () => {
-  const res: any = {};
-
-  res.status = (statusCode: number) => {
-    res.statusCode = statusCode;
-    return res;
+export const createMockRequest = (body: any = {}) => {
+  return {
+    body,
+    params: {},
+    query: {},
+    headers: {},
+    user: {},
   };
+};
 
-  res.json = (data: any) => {
-    res.body = data;
-    return res;
+export const createMockResponse = () => {
+  const res = {
+    statusCode: 200,
+    body: null as any,
+
+    status(code: number) {
+      res.statusCode = code;
+      return res;
+    },
+
+    json(data: any) {
+      res.body = data;
+      return res;
+    },
+
+    send(data: any) {
+      res.body = data;
+      return res;
+    },
   };
 
   return res;
-};
-
-export const createMockRequest = (body: any = {}, headers: any = {}) => {
-  return {
-    body,
-    headers,
-    user: undefined,
-  } as any;
 };
 
 export const createMockNext = () => {

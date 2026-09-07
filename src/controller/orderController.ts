@@ -35,24 +35,23 @@ export const checkout = async (req: any, res: any) => {
     if (!["COD", "UPI", "Card", "NetBanking"].includes(paymentMethod)) {
       return sendBadRequest(res, "Invalid payment method");
     }
-console.log("Logged user ID:", userId);
-console.log("Payload addressId:", addressId);
-console.log("Converted addressId:", Number(addressId));
+    console.log("Logged user ID:", userId);
+    console.log("Payload addressId:", addressId);
 
-const allAddresses = await Address.find({ userId });
+    const allAddresses = await Address.find({ userId });
 
-console.log("User addresses:", allAddresses);
+    console.log("User addresses:", allAddresses);
 
-const selectedAddress = await Address.findOne({
-  addressId: Number(addressId),
-  userId,
-});
+    const selectedAddress = await Address.findOne({
+      _id: addressId,
+      userId,
+    });
 
-console.log("Selected address:", selectedAddress);
+    console.log("Selected address:", selectedAddress);
 
-if (!selectedAddress) {
-  return sendNotFound(res, "Address not found");
-}
+    if (!selectedAddress) {
+      return sendNotFound(res, "Address not found");
+    }
 
     const cart = await Cart.findOne({ userId });
 
@@ -154,22 +153,25 @@ export const getOrders = async (req: any, res: any) => {
       return sendBadRequest(res, "User information is missing");
     }
 
-    const orders = await Order.find({ userId,status: { $ne: "Cancelled" } })
-      .populate("items.productId", "productName images")
-      .select("items")
+    const orders = await Order.find({ userId })
+      .populate("items.productId", "productName images status")
+      .select("-items.productName -userId")
       .sort({ createdAt: -1 });
 
-    const allOrders = orders.map((order: any) => ({
-      orderId: order._id,
-      items: order.items.map((item: any) => ({
-        productName: item.productName,
-        dealerId: item.dealerId,
-        quantity: item.quantity,
-        images: item.productId?.images || [],
-      })),
-    }));
+    const orderResponse = orders.map((order: any) => {
+      const orderData = order.toObject();
 
-    return sendSuccessResponse(res, "Orders fetched successfully", allOrders);
+      orderData.items.forEach((item: any) => {
+        delete item.dealerId;
+      });
+
+      return orderData;
+    });
+    return sendSuccessResponse(
+      res,
+      "Orders fetched successfully",
+      orderResponse,
+    );
   } catch (error) {
     console.log(error);
     return sendInternalServerError(res, "Failed to fetch orders");
@@ -184,8 +186,11 @@ export const getOrderById = async (req: any, res: any) => {
     }
     const order = await Order.findOne({ _id: orderId, userId: req.user._id })
       .populate("items.productId", "productName, price, images")
-      .populate("shippingAddress", "addressId addressLine1 addressLine2 city state pincode country")
-      .select("-__v -userId");
+      .populate(
+        "shippingAddress",
+        "addressId addressLine1 addressLine2 city state pincode country",
+      )
+      .select("-__v -userId -_id");
     if (!order) {
       return sendBadRequest(res, "order not found");
     }
@@ -199,7 +204,7 @@ export const cancelOrder = async (req: any, res: any) => {
   try {
     const userId = req.user?._id;
     const { orderId } = req.params;
-    const { reason } = req.body || {};
+    const { cancellationReason } = req.body || {};
 
     if (!userId) {
       return sendBadRequest(res, "User information is missing");
@@ -209,11 +214,8 @@ export const cancelOrder = async (req: any, res: any) => {
       return sendBadRequest(res, "Order ID is required");
     }
 
-    if (!reason || !reason.trim()) {
-      return sendBadRequest(
-        res,
-        "Cancellation reason is required"
-      );
+    if (!cancellationReason || !cancellationReason.trim()) {
+      return sendBadRequest(res, "Cancellation reason is required");
     }
 
     if (!mongoose.isValidObjectId(orderId)) {
@@ -222,7 +224,7 @@ export const cancelOrder = async (req: any, res: any) => {
 
     const order = await Order.findOne({
       _id: orderId,
-      userId: userId
+      userId: userId,
     });
 
     if (!order) {
@@ -234,14 +236,13 @@ export const cancelOrder = async (req: any, res: any) => {
     }
 
     order.status = "Cancelled";
-    order.cancellationReason = reason.trim();
+    order.cancellationReason = cancellationReason.trim();
 
     await order.save();
 
-   return sendSuccessResponse(res, "Order cancelled successfully", {
-  cancellationReason: order.cancellationReason
-});
-
+    return sendSuccessResponse(res, "Order cancelled successfully", {
+      cancellationReason: order.cancellationReason,
+    });
   } catch (error) {
     console.error(error);
     return sendInternalServerError(res, "Something went wrong");

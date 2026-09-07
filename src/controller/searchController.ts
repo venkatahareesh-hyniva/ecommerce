@@ -93,17 +93,17 @@ export const searchProducts = async (req: any, res: any) => {
 
     const products = await Product.find(filter)
       .select(
-        "productName description price discountPrice stock_quantity categoryId images videos createdBy updatedBy",
+        "productName description price discountPrice stock_quantity categoryId images videos" //createdBy updatedBy",
       )
       .populate("categoryId", "categoryName description")
-      .populate({
-        path: "createdBy",
-        select: "firstName lastName email -_id",
-      })
-      .populate({
-        path: "updatedBy",
-        select: "firstName lastName email -_id",
-      })
+      // .populate({
+      //   path: "createdBy",
+      //   select: "firstName lastName email -_id",
+      // })
+      // .populate({
+      //   path: "updatedBy",
+      //   select: "firstName lastName email -_id",
+      //})
       .skip(skip)
       .limit(limitNumber);
 
@@ -112,11 +112,7 @@ export const searchProducts = async (req: any, res: any) => {
         return sendNotFound(res, "Product not found");
       }
 
-      return sendSuccessResponse(
-        res,
-        "Product fetched successfully",
-        products,
-      );
+      return sendSuccessResponse(res, "Product fetched successfully", products);
     }
 
     const totalPages = Math.ceil(totalProducts / limitNumber);

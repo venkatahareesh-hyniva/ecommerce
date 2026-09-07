@@ -24,11 +24,11 @@ const orderSchema = new mongoose.Schema(
           required: true,
         },
 
-        productName: {
-          type: String,
-          required: true,
-          trim: true,
-        },
+        // productName: {
+        //   type: String,
+        //   required: true,
+        //   trim: true,
+        // },
 
         quantity: {
           type: Number,
@@ -81,11 +81,11 @@ const orderSchema = new mongoose.Schema(
       required: true,
     },
 
-    deliveryPartnerId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      default: null,
-    },
+    // deliveryPartnerId: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "User",
+    //   default: null,
+    // },
     cancellationReason: {
       type: String,
       trim: true,
