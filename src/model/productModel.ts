@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
-const productSchema = new mongoose.Schema(
+const ProductSchema = new mongoose.Schema(
   {
-     createdBy: {
+    createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
@@ -12,12 +12,12 @@ const productSchema = new mongoose.Schema(
       required: true,
     },
     productName: {
-    type: String,
-    required: true
+      type: String,
+      required: true,
     },
     description: {
       type: String,
-      required: true
+      required: true,
     },
     shortdescription: String,
     price: Number,
@@ -53,18 +53,27 @@ const productSchema = new mongoose.Schema(
       average: Number,
       total_reviews: Number,
     },
-    isDeleted:{
+    isDeleted: {
       type: Boolean,
       default: false,
-      select:false,
+      select: false,
     },
-  //  createdBy: String,
-  //  updatedBy: String,
+    //  createdBy: String,
+    //  updatedBy: String,
   },
   {
     timestamps: true,
     versionKey: false,
   },
 );
-const Product = mongoose.model("Product", productSchema);
+ProductSchema.index(
+  { productName: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      isDeleted: false,
+    },
+  },
+);
+const Product = mongoose.model("Product", ProductSchema);
 export default Product;

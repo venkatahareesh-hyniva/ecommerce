@@ -17,11 +17,11 @@ import { ROLES } from "../config/config.js";
 
 const productRouter = express.Router();
 
-productRouter.post("/",authMiddleware, authorizeRoles([ROLES.DEALER]), validateCreateProduct, createProduct);
+productRouter.post("/", validateCreateProduct, createProduct);
 
-productRouter.patch("/:productId",authMiddleware, authorizeRoles([ROLES.DEALER]), validateUpdateProduct,updateProduct);
+productRouter.patch("/:productId", validateUpdateProduct,updateProduct);
 
-productRouter.delete("/:productId",authMiddleware, authorizeRoles([ROLES.DEALER]), deleteProduct);
+productRouter.delete("/:productId", deleteProduct);
 
 
 
