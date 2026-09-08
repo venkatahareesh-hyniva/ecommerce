@@ -6,11 +6,11 @@ import { ROLES } from "../config/config.js";
 
 
 const orderRouter = express.Router();
-orderRouter.post("/", authMiddleware, authorizeRoles([ROLES.USER]), checkout);
-orderRouter.get("/",authMiddleware,authorizeRoles([ROLES.USER]) ,getOrders);
-orderRouter.get("/:id",authMiddleware,authorizeRoles([ROLES.USER,ROLES.DEALER]) ,getOrderById);
-orderRouter.delete("/:orderId",authMiddleware,authorizeRoles([ROLES.USER,ROLES.DEALER]) ,cancelOrder);
-orderRouter.delete("/:orderId/cancelItems",authMiddleware,authorizeRoles([ROLES.USER,ROLES.DEALER]) ,cancelOrderItems);
+orderRouter.post("/", authorizeRoles([ROLES.USER]), checkout);
+orderRouter.get("/",authorizeRoles([ROLES.USER]) ,getOrders);
+orderRouter.get("/:id",authorizeRoles([ROLES.USER,ROLES.DEALER]) ,getOrderById);
+orderRouter.delete("/:orderId",authorizeRoles([ROLES.USER,ROLES.DEALER]) ,cancelOrder);
+orderRouter.delete("/:orderId/cancelItems",authorizeRoles([ROLES.USER,ROLES.DEALER]) ,cancelOrderItems);
 
 
 export default orderRouter;

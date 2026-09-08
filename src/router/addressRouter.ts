@@ -8,19 +8,16 @@ import {
   updateAddress,
 } from "../controller/addressController.js";
 
-import { authMiddleware } from "../middleware/authmiddleware.js";
-import { authorizeRoles } from "../middleware/rolemiddleware.js";
-
 const addressRouter = express.Router();
 
 addressRouter.post("/me/address",createAddress);
 
 addressRouter.get("/me/addresses",getAddresses);
 
-addressRouter.put("/me/address/:addressId",updateAddress);
+addressRouter.put("/me/address/:id",updateAddress);
 
-addressRouter.get("/me/address/:addressId",getAddressById);
+addressRouter.get("/me/address/:id",getAddressById);
 
-addressRouter.delete("/me/address/:addressId",deleteAddress);
+addressRouter.delete("/me/address/:id",deleteAddress);
 
 export default addressRouter;

@@ -1,34 +1,37 @@
 import mongoose from "mongoose";
-const categorySchema = new mongoose.Schema(
+
+const CategorySchema = new mongoose.Schema(
   {
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
+
     updatedBy: {
-      updatedBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-      name: {
-        type: String,
-      },
-      role: {
-        type: String,
-      },
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
+
     categoryName: {
       type: String,
       required: true,
-      unique: true,
     },
-    description: String,
+
+    description: {
+      type: String,
+    },
+
     images: {
       type: [String],
       default: [],
     },
-    videos: [String],
+
+    videos: {
+      type: [String],
+      default: [],
+    },
+
     isDeleted: {
       type: Boolean,
       default: false,
@@ -37,9 +40,21 @@ const categorySchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-    
   },
 );
 
-const Category = mongoose.model("Category", categorySchema);
+// Active category names must be unique
+// Deleted category names can be reused
+CategorySchema.index(
+  { categoryName: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      isDeleted: false,
+    },
+  },
+);
+
+const Category = mongoose.model("Category", CategorySchema);
+
 export default Category;

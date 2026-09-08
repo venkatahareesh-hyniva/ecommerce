@@ -37,11 +37,11 @@ app.use("/api/user", authMiddleware, userRouter);
 //category
 app.use("/api/categories", categoryRouter);
 // product
-app.use("/api/products", productRouter);
+app.use("/api/products",authMiddleware, authorizeRoles([ROLES.DEALER]), productRouter);
 //carts
 app.use("/api/cart",authMiddleware, authorizeRoles([ROLES.USER]), cartRouter);
 //orders
-app.use("/api/orders", orderRouter)
+app.use("/api/orders",authMiddleware, orderRouter)
 //address
 app.use("/api/users",authMiddleware, authorizeRoles([ROLES.USER]),addressRouter)
 //role Management
