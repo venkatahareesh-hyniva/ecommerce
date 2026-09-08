@@ -18,14 +18,7 @@ export const createAddress = async (req: any, res: any) => {
     const { addressLine1, addressLine2, city, state, pincode, country } =
       req.body;
 
-    const lastAddress = await Address.findOne({ userId }).sort({
-      addressId: -1,
-    });
-
-    const addressId = lastAddress ? lastAddress.addressId + 1 : 1;
-
     const newAddress = await Address.create({
-      addressId,
       userId,
       addressLine1,
       addressLine2,

@@ -154,6 +154,7 @@ export const getOrders = async (req: any, res: any) => {
     }
 
     const orders = await Order.find({ userId })
+      .select("-cancellationReason -items.cancellationReason")
       .populate("items.productId", "productName images status")
       .select("-items.productName -userId")
       .sort({ createdAt: -1 });
@@ -186,6 +187,7 @@ export const getOrderById = async (req: any, res: any) => {
     }
     const order = await Order.findOne({ _id: orderId, userId: req.user._id })
       .populate("items.productId", "productName, price, images")
+      .select("-cancellationReason -items.cancellationReason")
       .populate(
         "shippingAddress",
         "addressId addressLine1 addressLine2 city state pincode country",
@@ -235,16 +237,126 @@ export const cancelOrder = async (req: any, res: any) => {
       return sendBadRequest(res, "Order is already cancelled");
     }
 
+    for (const item of order.items) {
+      if (item.status === "Cancelled") {
+        continue;
+      }
+
+      const product = await Product.findByIdAndUpdate(
+        item.productId,
+        {
+          $inc: {
+            stock_quantity: item.quantity,
+          },
+        },
+        {
+          new: true,
+        },
+      );
+
+      if (!product) {
+        return sendNotFound(res, `Product ${item.productId} not found`);
+      }
+
+      item.status = "Cancelled";
+      item.cancellationReason = cancellationReason.trim();
+    }
+
     order.status = "Cancelled";
     order.cancellationReason = cancellationReason.trim();
 
     await order.save();
 
-    return sendSuccessResponse(res, "Order cancelled successfully", {
-      cancellationReason: order.cancellationReason,
-    });
+    return sendSuccessResponse(
+      res,
+      "Order cancelled and stock restored successfully",
+      {
+        orderId: order._id,
+        status: order.status,
+        cancellationReason: order.cancellationReason,
+      },
+    );
   } catch (error) {
-    console.error(error);
+    console.error("Cancel order error:", error);
+
+    return sendInternalServerError(res, "Something went wrong");
+  }
+};
+
+export const cancelOrderItems = async (req: any, res: any) => {
+  try {
+    const userId = req.user?._id;
+    const { orderId } = req.params;
+    const { productIds, cancellationReason } = req.body || {};
+
+    if (!userId) {
+      return sendBadRequest(res, "User information is missing");
+    }
+    if (!orderId) {
+      return sendBadRequest(res, "Order ID is required");
+    }
+    if (!Array.isArray(productIds) || productIds.length === 0) {
+      return sendBadRequest(res, "Product IDs are required");
+    }
+    if (!cancellationReason || !cancellationReason.trim()) {
+      return sendBadRequest(res, "Cancellation reason is required");
+    }
+    if (!mongoose.isValidObjectId(orderId)) {
+      return sendBadRequest(res, "Invalid order ID");
+    }
+
+    for (const productId of productIds) {
+      if (!mongoose.isValidObjectId(productId)) {
+        return sendBadRequest(res, `Invalid product ID: ${productId}`);
+      }
+    }
+
+    const order = await Order.findOne({
+      _id: orderId,
+      userId,
+    });
+
+    if (!order) {
+      return sendNotFound(res, "Order not found");
+    }
+
+    for (const productId of productIds) {
+      const item: any = order.items.find(
+        (orderItem: any) =>
+          orderItem.productId?.toString() === productId.toString(),
+      );
+
+      if (!item) {
+        return sendNotFound(
+          res,
+          `Product ${productId} not found in this order`,
+        );
+      }
+
+      if (item.status === "Cancelled") {
+        return sendBadRequest(res, `Product ${productId} is already cancelled`);
+      }
+
+      const product = await Product.findByIdAndUpdate(
+        item.productId,
+        { $inc: { stock_quantity: item.quantity } },
+        { new: true },
+      );
+
+      if (!product) {
+        return sendNotFound(res, `Product ${productId} not found`);
+      }
+
+      item.status = "Cancelled";
+      item.cancellationReason = cancellationReason.trim();
+
+      order.totalAmount -= item.subtotal;
+    }
+    await order.save();
+
+    return sendSuccessResponse(res, "Products cancelled successfully");
+  } catch (error) {
+    console.error("Cancel order items error:", error);
     return sendInternalServerError(res, "Something went wrong");
   }
 };

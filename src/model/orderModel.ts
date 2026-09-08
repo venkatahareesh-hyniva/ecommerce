@@ -47,6 +47,11 @@ const orderSchema = new mongoose.Schema(
           required: true,
           min: 0,
         },
+        cancellationReason: {
+          type: String,
+          trim: true,
+          default: null,
+        },
 
         status: {
           type: String,
