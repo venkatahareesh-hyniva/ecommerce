@@ -19,7 +19,7 @@ const categoryRouter = express.Router();
 categoryRouter.post("/", authMiddleware,authorizeRoles([ROLES.ADMIN,ROLES.DEALER]), validateCreateCategory, createCategory);
 categoryRouter.get("/", getCategory);
 categoryRouter.get("/:id", getCategoryById);
-categoryRouter.put("/:id", authMiddleware, authorizeRoles([ROLES.ADMIN,ROLES.DEALER]),validateUpdateCategory, updateCategory);
-categoryRouter.delete("/:id", authMiddleware, authorizeRoles([ROLES.ADMIN,ROLES.DEALER]), deleteCategory);
+categoryRouter.put("/:id", authMiddleware, authorizeRoles([ROLES.ADMIN]),validateUpdateCategory, updateCategory);
+categoryRouter.delete("/:id", authMiddleware, authorizeRoles([ROLES.ADMIN]), deleteCategory);
 
 export default categoryRouter;

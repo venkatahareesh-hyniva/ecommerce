@@ -80,7 +80,7 @@ class CartService {
     };
   }
 
-    async getCart(userId: any) {
+  async getCart(userId: any) {
     const cart = await Cart.findOne({ userId })
       .populate("items.productId", "productName price discountPrice images")
       .select("-__v");
@@ -100,9 +100,12 @@ class CartService {
       data: cartResponse,
     };
   }
+  async getCartByUserId(userId: string) {
+    return await Cart.findOne({ userId }).select("-__v");
+  }
 
   async updateCartItem(userId: any, items: any[]) {
-    const cart = await Cart.findOne({ userId }).select("-__v");
+    const cart = await this.getCartByUserId(userId);
 
     if (!cart) {
       return {
@@ -127,7 +130,7 @@ class CartService {
         };
       }
 
-           if (quantity !== undefined) {
+      if (quantity !== undefined) {
         const product = await Product.findOne({
           _id: productId,
           isDeleted: false,
@@ -150,7 +153,6 @@ class CartService {
         cartItem.quantity = quantity;
       }
 
-      // Update selection
       if (isSelected !== undefined) {
         cartItem.set("isSelected", isSelected);
       }
@@ -168,7 +170,6 @@ class CartService {
     };
   }
 
-  // REMOVE CART ITEM
   async removeCartItem(userId: any, productId: string) {
     const cart = await Cart.findOne({ userId });
 
@@ -200,7 +201,6 @@ class CartService {
     };
   }
 
-  // CLEAR CART
   async clearCart(userId: any) {
     const cart = await Cart.findOneAndUpdate(
       { userId },

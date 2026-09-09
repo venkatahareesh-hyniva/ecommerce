@@ -1,5 +1,3 @@
-import mongoose from "mongoose";
-
 import {
   sendBadRequest,
   sendInternalServerError,
@@ -8,30 +6,20 @@ import {
 } from "../utils/response-utils.js";
 
 import AddressService from "../service/addressService.js";
+import { isValidObjectId } from "../utils/validation-utils.js";
 
 export const createAddress = async (req: any, res: any) => {
   try {
     const userId = req.user?._id;
 
-    if (!userId) {
-      return sendBadRequest(res, "User information is missing");
-    }
-
     const { addressLine1, addressLine2, city, state, pincode, country } =
       req.body;
 
-    if (!addressLine1 || !city || !state || !pincode || !country) {
+    if (!addressLine1 || addressLine2 || !city || !state || !pincode || !country) {
       return sendBadRequest(res, "Required address fields are missing");
     }
 
-    const newAddress = await AddressService.createAddress(userId, {
-      addressLine1,
-      addressLine2,
-      city,
-      state,
-      pincode,
-      country,
-    });
+    const newAddress = await AddressService.createAddress(userId, req.body);
 
     return sendSuccessResponse(res, "Address created successfully", newAddress);
   } catch (error) {
@@ -46,15 +34,11 @@ export const updateAddress = async (req: any, res: any) => {
     const userId = req.user?._id;
     const id = req.params.id;
 
-    if (!userId) {
-      return sendBadRequest(res, "User information is missing");
-    }
-
-    if (typeof id !== "string" || !id) {
+    if (!id) {
       return sendBadRequest(res, "Address ID is required");
     }
 
-    if (!mongoose.isValidObjectId(id)) {
+    if (!isValidObjectId(id)) {
       return sendBadRequest(res, "Invalid address ID");
     }
 
@@ -84,10 +68,6 @@ export const getAddresses = async (req: any, res: any) => {
   try {
     const userId = req.user?._id;
 
-    if (!userId) {
-      return sendBadRequest(res, "User information is missing");
-    }
-
     const addresses = await AddressService.getAddresses(userId);
 
     return sendSuccessResponse(res, "Addresses found successfully", addresses);
@@ -103,15 +83,11 @@ export const getAddressById = async (req: any, res: any) => {
     const userId = req.user?._id;
     const id = req.params.id;
 
-    if (!userId) {
-      return sendBadRequest(res, "User information is missing");
-    }
-
-    if (typeof id !== "string" || !id) {
+    if (!id) {
       return sendBadRequest(res, "Address ID is required");
     }
 
-    if (!mongoose.isValidObjectId(id)) {
+    if (!isValidObjectId(id)) {
       return sendBadRequest(res, "Invalid address ID");
     }
 
@@ -134,15 +110,11 @@ export const deleteAddress = async (req: any, res: any) => {
     const userId = req.user?._id;
     const id = req.params.id;
 
-    if (!userId) {
-      return sendBadRequest(res, "User information is missing");
-    }
-
-    if (typeof id !== "string" || !id) {
+    if (!id) {
       return sendBadRequest(res, "Address ID is required");
     }
 
-    if (!mongoose.isValidObjectId(id)) {
+    if (!isValidObjectId(id)) {
       return sendBadRequest(res, "Invalid address ID");
     }
 

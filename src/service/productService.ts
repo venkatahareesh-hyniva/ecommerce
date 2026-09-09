@@ -1,8 +1,7 @@
 import Product from "../model/productModel.js";
 
 class ProductService {
-  // CREATE PRODUCT
-  async createProduct(productData: any, user: any): Promise<any> {
+  async createProduct(productData: any, createdBy: any): Promise<any> {
     const {
       productName,
       description,
@@ -15,13 +14,12 @@ class ProductService {
 
     const trimmedProductName = productName.trim();
 
-    // Check only active products
     const existingProduct = await Product.findOne({
       productName: trimmedProductName,
       isDeleted: false,
+      createdBy,
     });
 
-    // Active product already exists
     if (existingProduct) {
       return {
         type: "exists",
@@ -29,8 +27,6 @@ class ProductService {
       };
     }
 
-    // Create a NEW product
-    // even if an old product with the same name was deleted
     const product = await Product.create({
       productName: trimmedProductName,
       description,
@@ -39,12 +35,11 @@ class ProductService {
       categoryId,
       images,
       videos,
-      createdBy: user._id,
-      updatedBy: user._id,
+      createdBy: createdBy,
+      updatedBy: createdBy,
     });
 
     const responseData: any = product.toObject();
-
 
     delete responseData.createdBy;
     delete responseData.updatedBy;
@@ -57,7 +52,6 @@ class ProductService {
     };
   }
 
-  
   async updateProduct(
     productId: string,
     productData: any,
@@ -88,7 +82,6 @@ class ProductService {
       };
     }
 
-   
     if (existingProduct.createdBy.toString() !== user._id.toString()) {
       return {
         type: "notOwner",
@@ -96,7 +89,6 @@ class ProductService {
       };
     }
 
-   
     if (productName !== undefined) {
       if (productName.trim() !== existingProduct.productName.trim()) {
         return {
@@ -106,7 +98,6 @@ class ProductService {
       }
     }
 
-   
     if (categoryId !== undefined) {
       if (
         !existingProduct.categoryId ||
@@ -123,27 +114,22 @@ class ProductService {
       updatedBy: user._id,
     };
 
-    
     if (description !== undefined) {
       updateData.description = description;
     }
 
-    
     if (price !== undefined) {
       updateData.price = price;
     }
 
-   
     if (stock_quantity !== undefined) {
       updateData.stock_quantity = stock_quantity;
     }
 
-   
     if (Object.keys(data).length > 0) {
       Object.assign(updateData, data);
     }
 
-   
     await Product.findOneAndUpdate(
       {
         _id: productId,
@@ -154,7 +140,6 @@ class ProductService {
       },
     );
 
-    
     const mediaData: any = {};
 
     if (images.length > 0) {
@@ -181,7 +166,6 @@ class ProductService {
       );
     }
 
-    
     if (deleteImages.length > 0 || deleteVideos.length > 0) {
       const pullData: any = {};
 
@@ -208,7 +192,6 @@ class ProductService {
       );
     }
 
-   
     const updatedProduct = await Product.findOne({
       _id: productId,
       isDeleted: false,
@@ -219,7 +202,6 @@ class ProductService {
       data: updatedProduct,
     };
   }
-
 
   async deleteProduct(productId: string, user: any): Promise<any> {
     const existingProduct = await Product.findOne({
@@ -251,6 +233,12 @@ class ProductService {
       type: "deleted",
       data: null,
     };
+  }
+  async getProductById(productId: string) {
+    return await Product.findOne({
+      _id: productId,
+      isDeleted: false,
+    });
   }
 }
 

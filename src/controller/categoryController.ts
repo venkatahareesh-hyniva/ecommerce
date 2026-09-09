@@ -249,7 +249,6 @@ export const getCategory = async (req: any, res: any) => {
     return sendSuccessResponse(res, "Categories found", categories);
   } catch (error) {
     console.log("Get categories error:", error);
-
     return sendBadRequest(res, "Failed to get categories");
   }
 };
@@ -271,7 +270,6 @@ export const getCategoryById = async (req: any, res: any) => {
     return sendSuccessResponse(res, "Category found successfully", category);
   } catch (error) {
     console.log("Get category by ID error:", error);
-
     return sendBadRequest(res, "Failed to get category");
   }
 };

@@ -11,10 +11,6 @@ import {
   validateUpdateProduct,
 } from "../validator/product.validator.js";
 
-import { authMiddleware } from "../middleware/authmiddleware.js";
-import { authorizeRoles} from "../middleware/rolemiddleware.js";
-import { ROLES } from "../config/config.js";
-
 const productRouter = express.Router();
 
 productRouter.post("/", validateCreateProduct, createProduct);

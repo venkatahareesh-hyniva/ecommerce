@@ -275,7 +275,7 @@ export const createProduct = async (req: any, res: any) => {
         images,
         videos,
       },
-      user,
+      user._id,
     );
 
     if (result.type === "exists") {
@@ -289,7 +289,6 @@ export const createProduct = async (req: any, res: any) => {
     );
   } catch (error) {
     console.log("Create product error:", error);
-
     return sendBadRequest(res, "Failed to create product");
   }
 };
@@ -333,7 +332,6 @@ export const updateProduct = async (req: any, res: any) => {
     );
   } catch (error) {
     console.log("Update product error:", error);
-
     return sendInternalServerError(res, "Failed to update product");
   }
 };
@@ -361,7 +359,6 @@ export const deleteProduct = async (req: any, res: any) => {
     return sendSuccessResponse(res, "Product deleted successfully");
   } catch (error) {
     console.log("Delete product error:", error);
-
     return sendInternalServerError(res, "Failed to delete product");
   }
 };

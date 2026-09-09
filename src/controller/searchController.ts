@@ -1,139 +1,139 @@
-import mongoose from "mongoose";
-import Product from "../model/productModel.js";
-import {
-  sendBadRequest,
-  sendInternalServerError,
-  sendNotFound,
-  sendSuccessResponse,
-} from "../utils/response-utils.js";
-import { isValidObjectId } from "../utils/validation-utils.js";
+// import mongoose from "mongoose";
+// import Product from "../model/productModel.js";
+// import {
+//   sendBadRequest,
+//   sendInternalServerError,
+//   sendNotFound,
+//   sendSuccessResponse,
+// } from "../utils/response-utils.js";
+// import { isValidObjectId } from "../utils/validation-utils.js";
 
-export const searchProducts = async (req: any, res: any) => {
-  try {
-    const {
-      search,
-      categoryId,
-      minPrice,
-      maxPrice,
-      page = 1,
-      limit = 10,
-    } = req.query;
+// export const searchProducts = async (req: any, res: any) => {
+//   try {
+//     const {
+//       search,
+//       categoryId,
+//       minPrice,
+//       maxPrice,
+//       page = 1,
+//       limit = 10,
+//     } = req.query;
 
-    const { id } = req.params;
+//     const { id } = req.params;
 
-    const filter: any = {
-      isDeleted: false,
-    };
+//     const filter: any = {
+//       isDeleted: false,
+//     };
 
-    if (id) {
-      if (!isValidObjectId(id)) {
-        return sendBadRequest(res, "Invalid product ID");
-      }
+//     if (id) {
+//       if (!isValidObjectId(id)) {
+//         return sendBadRequest(res, "Invalid product ID");
+//       }
 
-      filter._id = id;
-    }
+//       filter._id = id;
+//     }
 
-    if (search) {
-      filter.productName = {
-        $regex: search.trim(),
-        $options: "i",
-      };
-    }
+//     if (search) {
+//       filter.productName = {
+//         $regex: search.trim(),
+//         $options: "i",
+//       };
+//     }
 
-    if (categoryId) {
-      if (!isValidObjectId(categoryId)) {
-        return sendBadRequest(res, "Invalid category ID");
-      }
+//     if (categoryId) {
+//       if (!isValidObjectId(categoryId)) {
+//         return sendBadRequest(res, "Invalid category ID");
+//       }
 
-      filter.categoryId = categoryId;
-    }
+//       filter.categoryId = categoryId;
+//     }
 
-    if (minPrice || maxPrice) {
-      filter.price = {};
+//     if (minPrice || maxPrice) {
+//       filter.price = {};
 
-      if (minPrice) {
-        const minimum = Number(minPrice);
+//       if (minPrice) {
+//         const minimum = Number(minPrice);
 
-        if (isNaN(minimum)) {
-          return sendBadRequest(res, "Invalid minimum price");
-        }
+//         if (isNaN(minimum)) {
+//           return sendBadRequest(res, "Invalid minimum price");
+//         }
 
-        filter.price.$gte = minimum;
-      }
+//         filter.price.$gte = minimum;
+//       }
 
-      if (maxPrice) {
-        const maximum = Number(maxPrice);
+//       if (maxPrice) {
+//         const maximum = Number(maxPrice);
 
-        if (isNaN(maximum)) {
-          return sendBadRequest(res, "Invalid maximum price");
-        }
+//         if (isNaN(maximum)) {
+//           return sendBadRequest(res, "Invalid maximum price");
+//         }
 
-        filter.price.$lte = maximum;
-      }
-    }
+//         filter.price.$lte = maximum;
+//       }
+//     }
 
-    const pageNumber = Number(page);
-    const limitNumber = Number(limit);
+//     const pageNumber = Number(page);
+//     const limitNumber = Number(limit);
 
-    if (!Number.isInteger(pageNumber) || pageNumber < 1) {
-      return sendBadRequest(res, "Page must be a positive number");
-    }
+//     if (!Number.isInteger(pageNumber) || pageNumber < 1) {
+//       return sendBadRequest(res, "Page must be a positive number");
+//     }
 
-    if (
-      !Number.isInteger(limitNumber) ||
-      limitNumber < 1 ||
-      limitNumber > 100
-    ) {
-      return sendBadRequest(res, "Limit must be between 1 and 100");
-    }
+//     if (
+//       !Number.isInteger(limitNumber) ||
+//       limitNumber < 1 ||
+//       limitNumber > 100
+//     ) {
+//       return sendBadRequest(res, "Limit must be between 1 and 100");
+//     }
 
-    const skip = (pageNumber - 1) * limitNumber;
+//     const skip = (pageNumber - 1) * limitNumber;
 
-    const totalProducts = await Product.countDocuments(filter);
+//     const totalProducts = await Product.countDocuments(filter);
 
-    const products = await Product.find(filter)
-      .select(
-        "productName description price discountPrice stock_quantity categoryId images videos" //createdBy updatedBy",
-      )
-      .populate("categoryId", "categoryName description")
-      // .populate({
-      //   path: "createdBy",
-      //   select: "firstName lastName email -_id",
-      // })
-      // .populate({
-      //   path: "updatedBy",
-      //   select: "firstName lastName email -_id",
-      //})
-      .skip(skip)
-      .limit(limitNumber);
+//     const products = await Product.find(filter)
+//       .select(
+//         "productName description price discountPrice stock_quantity categoryId images videos" //createdBy updatedBy",
+//       )
+//       .populate("categoryId", "categoryName description")
+//       // .populate({
+//       //   path: "createdBy",
+//       //   select: "firstName lastName email -_id",
+//       // })
+//       // .populate({
+//       //   path: "updatedBy",
+//       //   select: "firstName lastName email -_id",
+//       //})
+//       .skip(skip)
+//       .limit(limitNumber);
 
-    if (id) {
-      if (products.length === 0) {
-        return sendNotFound(res, "Product not found");
-      }
+//     if (id) {
+//       if (products.length === 0) {
+//         return sendNotFound(res, "Product not found");
+//       }
 
-      return sendSuccessResponse(res, "Product fetched successfully", products);
-    }
+//       return sendSuccessResponse(res, "Product fetched successfully", products);
+//     }
 
-    const totalPages = Math.ceil(totalProducts / limitNumber);
+//     const totalPages = Math.ceil(totalProducts / limitNumber);
 
-    return sendSuccessResponse(res, "Products found successfully", {
-      products,
-      pagination: {
-        currentPage: pageNumber,
-        limit: limitNumber,
-        totalProducts,
-        totalPages,
-        hasNextPage: pageNumber < totalPages,
-        hasPreviousPage: pageNumber > 1,
-      },
-    });
-  } catch (error) {
-    console.log("Get products error:", error);
+//     return sendSuccessResponse(res, "Products found successfully", {
+//       products,
+//       pagination: {
+//         currentPage: pageNumber,
+//         limit: limitNumber,
+//         totalProducts,
+//         totalPages,
+//         hasNextPage: pageNumber < totalPages,
+//         hasPreviousPage: pageNumber > 1,
+//       },
+//     });
+//   } catch (error) {
+//     console.log("Get products error:", error);
 
-    return sendInternalServerError(res, "Failed to get products");
-  }
-};
+//     return sendInternalServerError(res, "Failed to get products");
+//   }
+// };
 
 //export const getAllProducts = async (req: any, res: any) => {
 //   try {
@@ -226,3 +226,129 @@ export const searchProducts = async (req: any, res: any) => {
 //     return sendInternalServerError(res, "Failed to fetch product");
 //   }
 //};
+
+import { searchProductsService } from "../service/searchService.js";
+import {
+  sendBadRequest,
+  sendInternalServerError,
+  sendNotFound,
+  sendSuccessResponse,
+} from "../utils/response-utils.js";
+
+import { isValidObjectId } from "../utils/validation-utils.js";
+
+export const searchProducts = async (req: any, res: any) => {
+  try {
+    const {
+      search,
+      categoryId,
+      minPrice,
+      maxPrice,
+      page = 1,
+      limit = 10,
+    } = req.query;
+
+    const { id } = req.params;
+
+    const filter: any = {
+      isDeleted: false,
+    };
+
+    // Product ID filter
+    if (id) {
+      if (!isValidObjectId(id)) {
+        return sendBadRequest(res, "Invalid product ID");
+      }
+
+      filter._id = id;
+    }
+
+    if (search) {
+      filter.productName = {
+        $regex: search.trim(),
+        $options: "i",
+      };
+    }
+
+    if (categoryId) {
+      if (!isValidObjectId(categoryId)) {
+        return sendBadRequest(res, "Invalid category ID");
+      }
+
+      filter.categoryId = categoryId;
+    }
+
+    if (minPrice || maxPrice) {
+      filter.price = {};
+
+      if (minPrice) {
+        const minimum = Number(minPrice);
+
+        if (isNaN(minimum)) {
+          return sendBadRequest(res, "Invalid minimum price");
+        }
+
+        filter.price.$gte = minimum;
+      }
+
+      if (maxPrice) {
+        const maximum = Number(maxPrice);
+
+        if (isNaN(maximum)) {
+          return sendBadRequest(res, "Invalid maximum price");
+        }
+
+        filter.price.$lte = maximum;
+      }
+    }
+
+    const pageNumber = Number(page);
+    const limitNumber = Number(limit);
+
+    if (!Number.isInteger(pageNumber) || pageNumber < 1) {
+      return sendBadRequest(res, "Page must be a positive number");
+    }
+
+    if (
+      !Number.isInteger(limitNumber) ||
+      limitNumber < 1 ||
+      limitNumber > 100
+    ) {
+      return sendBadRequest(res, "Limit must be between 1 and 100");
+    }
+
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const result = await searchProductsService(filter, skip, limitNumber);
+
+    if (id) {
+      if (result.products.length === 0) {
+        return sendNotFound(res, "Product not found");
+      }
+
+      return sendSuccessResponse(
+        res,
+        "Product fetched successfully",
+        result.products,
+      );
+    }
+
+    const totalPages = Math.ceil(result.totalProducts / limitNumber);
+
+    return sendSuccessResponse(res, "Products found successfully", {
+      products: result.products,
+      pagination: {
+        currentPage: pageNumber,
+        limit: limitNumber,
+        totalProducts: result.totalProducts,
+        totalPages,
+        hasNextPage: pageNumber < totalPages,
+        hasPreviousPage: pageNumber > 1,
+      },
+    });
+  } catch (error) {
+    console.log("Get products error:", error);
+
+    return sendInternalServerError(res, "Failed to get products");
+  }
+};

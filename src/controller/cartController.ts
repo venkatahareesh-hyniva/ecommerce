@@ -291,7 +291,6 @@ import { isValidObjectId } from "../utils/validation-utils.js";
 
 import cartService from "../service/cartService.js";
 
-// ADD TO CART
 export const addToCart = async (req: any, res: any) => {
   try {
     const userId = req.user?._id;
@@ -343,7 +342,6 @@ export const addToCart = async (req: any, res: any) => {
   }
 };
 
-// GET CART
 export const getCart = async (req: any, res: any) => {
   try {
     const userId = req.user?._id;
@@ -370,7 +368,6 @@ export const getCart = async (req: any, res: any) => {
   }
 };
 
-// UPDATE CART ITEM
 export const updateCartItem = async (req: any, res: any) => {
   try {
     const userId = req.user?._id;
@@ -434,7 +431,6 @@ export const updateCartItem = async (req: any, res: any) => {
   }
 };
 
-// REMOVE CART ITEM
 export const removeCartItem = async (req: any, res: any) => {
   try {
     const userId = req.user?._id;
@@ -470,7 +466,6 @@ export const removeCartItem = async (req: any, res: any) => {
   }
 };
 
-// CLEAR CART
 export const clearCart = async (req: any, res: any) => {
   try {
     const userId = req.user?._id;

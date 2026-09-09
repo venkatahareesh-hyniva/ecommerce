@@ -1,10 +1,9 @@
 import Category from "../model/categoryModel.js";
 
 class CategoryService {
-  // CREATE CATEGORY
+  
   async createCategory(categoryData: any, user: any): Promise<any> {
     const { categoryName, description, images, videos } = categoryData;
-
     const trimmedCategoryName = categoryName.trim();
 
     const existingCategory = await Category.findOne({
@@ -27,7 +26,6 @@ class CategoryService {
     });
 
     const responseData: any = category.toObject();
-
     delete responseData.isDeleted;
     delete responseData.__v;
 
@@ -41,7 +39,7 @@ class CategoryService {
     };
   }
 
-  // GET ALL ACTIVE CATEGORIES
+ 
   async getCategories(): Promise<any> {
     const categories = await Category.find({
       isDeleted: false,
@@ -55,7 +53,7 @@ class CategoryService {
     return categories;
   }
 
-  // GET CATEGORY BY ID
+ 
   async getCategoryById(id: string): Promise<any> {
     const category = await Category.findOne({
       _id: id,
@@ -70,7 +68,7 @@ class CategoryService {
     return category;
   }
 
-  // UPDATE CATEGORY
+  
   async updateCategory(id: string, categoryData: any, user: any): Promise<any> {
     const {
       categoryName,
@@ -109,13 +107,11 @@ class CategoryService {
       }
     }
 
-    // Update description
-    if (description !== undefined) {
+      if (description !== undefined) {
       existingCategory.description = description.trim();
     }
 
-    // Add images
-    if (images?.length > 0) {
+      if (images?.length > 0) {
       const duplicateImage = images.find((image: string) =>
         existingCategory.images.includes(image),
       );
@@ -130,19 +126,16 @@ class CategoryService {
       existingCategory.images.push(...images);
     }
 
-    // Add videos
-    if (videos?.length > 0) {
+      if (videos?.length > 0) {
       existingCategory.videos.push(...videos);
     }
 
-    // Delete images
-    if (deleteImages.length > 0) {
+      if (deleteImages.length > 0) {
       existingCategory.images = existingCategory.images.filter(
         (image: string) => !deleteImages.includes(image),
       );
     }
 
-    // Delete videos
     if (deleteVideos.length > 0) {
       existingCategory.videos = existingCategory.videos.filter(
         (video: string) => !deleteVideos.includes(video),
@@ -150,7 +143,6 @@ class CategoryService {
     }
 
     existingCategory.updatedBy = user._id;
-
     await existingCategory.save();
 
     const responseData: any = existingCategory.toObject();
@@ -165,7 +157,7 @@ class CategoryService {
       data: responseData,
     };
   }
-  // SOFT DELETE CATEGORY
+  
   async deleteCategory(id: string): Promise<boolean> {
     const existingCategory = await Category.findOne({
       _id: id,
